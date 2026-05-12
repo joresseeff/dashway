@@ -18,10 +18,10 @@ jobs:
       - name: Install linter
         run: pip install flake8
       - name: Run flake8
-        run: flake8 scr/ --statistics
+        run: flake8 scr/ api/ --statistics
 
-  test:
-    name: Tests (pytest)
+  test-game:
+    name: Tests jeu (pytest)
     runs-on: ubuntu-latest
     needs: lint
     steps:
@@ -35,13 +35,29 @@ jobs:
         env:
           SDL_VIDEODRIVER: dummy
           SDL_AUDIODRIVER: dummy
-        run: pytest tests/ -v --tb=short
+        run: pytest tests/test_button.py tests/test_player.py tests/test_database.py tests/test_powerup.py -v --tb=short
+
+  test-api:
+    name: Tests API (pytest)
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r api/requirements.txt pytest httpx
+      - name: Run API tests
+        run: pytest tests/test_api.py -v --tb=short
 
   docker-build:
     name: Docker build check
     runs-on: ubuntu-latest
-    needs: test
+    needs: [test-game, test-api]
     steps:
       - uses: actions/checkout@v4
-      - name: Build Docker image
+      - name: Build game image
         run: docker build -t dashway:ci .
+      - name: Build API image
+        run: docker build -t dashway-api:ci ./api
