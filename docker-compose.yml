@@ -1,0 +1,24 @@
+# docker-compose.yml
+# ------------------
+# Lance Dashway dans un conteneur avec forwarding d'affichage X11.
+#
+# Linux / WSL2 :
+#   export DISPLAY=:0   (ou la valeur de ton $DISPLAY)
+#   docker compose up
+#
+# Le fichier dashway.db est monté en volume pour persister les scores.
+
+services:
+  dashway:
+    build: .
+    image: ghcr.io/joresseeff/dashway:latest
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - dashway-data:/app/dashway.db
+    network_mode: host
+    restart: "no"
+
+volumes:
+  dashway-data:

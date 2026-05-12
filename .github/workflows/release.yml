@@ -1,14 +1,3 @@
-# ──────────────────────────────────────────────────────────────────────────────
-# release.yml — Dashway Auto-Release
-#
-# Triggered when a version tag (v*.*.*) is pushed.
-# Builds a Windows .exe with PyInstaller and attaches it to the GitHub Release.
-#
-# Usage:
-#   git tag v1.0.0
-#   git push origin v1.0.0
-# ──────────────────────────────────────────────────────────────────────────────
-
 name: Release
 
 on:
@@ -17,54 +6,66 @@ on:
       - "v*.*.*"
 
 jobs:
+  # ── Windows executable ────────────────────────────────────────────────────
   build-windows:
     name: Build Windows executable
     runs-on: windows-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install dependencies
         run: pip install pygame pyinstaller
-
-      - name: Build executable
+      - name: Build exe
         working-directory: scr
         run: >
-          pyinstaller
-          --onefile
-          --noconsole
-          --name Dashway
+          pyinstaller --onefile --noconsole --name Dashway
           --add-data "../assets;assets"
           --add-data "../sounds;sounds"
           --add-data "../munro.ttf;."
           main.py
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: Dashway-windows
           path: scr/dist/Dashway.exe
 
-  # ── Create GitHub Release ──────────────────────────────────────────────────
+  # ── Docker image → GitHub Container Registry ──────────────────────────────
+  docker-publish:
+    name: Publish Docker image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+
+  # ── GitHub Release ────────────────────────────────────────────────────────
   github-release:
     name: Publish GitHub Release
     runs-on: ubuntu-latest
-    needs: build-windows
+    needs: [build-windows, docker-publish]
     permissions:
       contents: write
-
     steps:
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
           name: Dashway-windows
-
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
@@ -72,10 +73,9 @@ jobs:
           body: |
             ## 🚗 Dashway ${{ github.ref_name }}
 
-            ### Installation
-            Download **Dashway.exe** below and run it — no Python required.
+            ### Download
+            - **Windows** : télécharge `Dashway.exe` ci-dessous — aucune installation requise
+            - **Docker** : `docker pull ghcr.io/joresseeff/dashway:${{ github.ref_name }}`
 
             ### Changelog
-            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
-          draft: false
-          prerelease: false
+            Voir [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
