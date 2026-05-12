@@ -1,0 +1,81 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# release.yml — Dashway Auto-Release
+#
+# Triggered when a version tag (v*.*.*) is pushed.
+# Builds a Windows .exe with PyInstaller and attaches it to the GitHub Release.
+#
+# Usage:
+#   git tag v1.0.0
+#   git push origin v1.0.0
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build-windows:
+    name: Build Windows executable
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install pygame pyinstaller
+
+      - name: Build executable
+        working-directory: scr
+        run: >
+          pyinstaller
+          --onefile
+          --noconsole
+          --name Dashway
+          --add-data "../assets;assets"
+          --add-data "../sounds;sounds"
+          --add-data "../munro.ttf;."
+          main.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dashway-windows
+          path: scr/dist/Dashway.exe
+
+  # ── Create GitHub Release ──────────────────────────────────────────────────
+  github-release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: build-windows
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Dashway-windows
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Dashway.exe
+          body: |
+            ## 🚗 Dashway ${{ github.ref_name }}
+
+            ### Installation
+            Download **Dashway.exe** below and run it — no Python required.
+
+            ### Changelog
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+          draft: false
+          prerelease: false
