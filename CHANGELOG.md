@@ -9,6 +9,23 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Planned
+- Online leaderboard (FastAPI + JWT)
+- Web/mobile port (Phaser.js or Kivy)
+
+---
+
+## [1.1.0] — 2026
+
+### Added
+- SQLite database replaces save.txt (top-5 leaderboard, player inventory)
+- Power-ups: Shield (P key), Slow Motion, Multiplier
+- Pause menu (ESC key, timers frozen correctly)
+- Scores screen from main menu
+- 24 total unit tests (11 new)
+
+##
+
+### Planned
 - Power-ups: shield, slow motion, score multiplier
 - Top-5 local leaderboard (SQLite)
 - Pause menu
