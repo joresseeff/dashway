@@ -2,7 +2,6 @@
 tests/test_api.py
 -----------------
 Integration tests for the Dashway FastAPI backend.
-Uses an in-memory SQLite database — no real server needed.
 """
 
 import sys
@@ -13,16 +12,18 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from database import Base, get_db
 from main import app
 
-# ── In-memory test database ───────────────────────────────────────────────────
-TEST_DB_URL = "sqlite://"
-engine      = create_engine(TEST_DB_URL, connect_args={"check_same_thread": False})
+# StaticPool force toutes les connexions à partager la même DB en mémoire
+engine = create_engine(
+    "sqlite://",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
 TestSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Créer les tables AVANT tout test
 Base.metadata.create_all(bind=engine)
 
 
@@ -35,28 +36,19 @@ def override_get_db():
 
 
 app.dependency_overrides[get_db] = override_get_db
-client = TestClient(app, raise_server_exceptions=True)
+client = TestClient(app)
 
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def register_and_login(username="testuser", password="secret123"):
     client.post("/auth/register", json={"username": username, "password": password})
-    resp = client.post(
-        "/auth/login",
-        data={"username": username, "password": password},
-    )
+    resp = client.post("/auth/login", data={"username": username, "password": password})
     return resp.json()["access_token"]
 
-
-# ── Health ────────────────────────────────────────────────────────────────────
 
 class TestHealth:
     def test_health(self):
         assert client.get("/").status_code == 200
 
-
-# ── Auth ──────────────────────────────────────────────────────────────────────
 
 class TestAuth:
     def test_register(self):
@@ -79,8 +71,6 @@ class TestAuth:
         r = client.post("/auth/login", data={"username": "dave", "password": "wrong"})
         assert r.status_code == 401
 
-
-# ── Scores ────────────────────────────────────────────────────────────────────
 
 class TestScores:
     def test_leaderboard_empty(self):
@@ -109,10 +99,7 @@ class TestScores:
         assert r.status_code == 403
 
     def test_submit_without_token(self):
-        r = client.post(
-            "/scores/submit",
-            json={"score": 10, "duration_s": 30.0, "hmac": "any"},
-        )
+        r = client.post("/scores/submit", json={"score": 10, "duration_s": 30.0, "hmac": "any"})
         assert r.status_code == 401
 
     def test_leaderboard_after_submit(self):
