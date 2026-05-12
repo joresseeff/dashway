@@ -5,7 +5,8 @@ Integration tests for the Dashway FastAPI backend.
 Uses an in-memory SQLite database — no real server needed.
 """
 
-import sys, os
+import sys
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "api"))
 
 import pytest
@@ -20,6 +21,8 @@ from main import app
 TEST_DB_URL = "sqlite://"
 engine      = create_engine(TEST_DB_URL, connect_args={"check_same_thread": False})
 TestSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Créer les tables AVANT tout test
 Base.metadata.create_all(bind=engine)
 
 
@@ -32,7 +35,7 @@ def override_get_db():
 
 
 app.dependency_overrides[get_db] = override_get_db
-client = TestClient(app)
+client = TestClient(app, raise_server_exceptions=True)
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -87,7 +90,7 @@ class TestScores:
 
     def test_submit_valid_score(self):
         from security import compute_digest
-        token = register_and_login("player1", "pass123")
+        token  = register_and_login("player1", "pass123")
         digest = compute_digest("player1", 42, 95.0)
         r = client.post(
             "/scores/submit",
@@ -114,13 +117,13 @@ class TestScores:
 
     def test_leaderboard_after_submit(self):
         from security import compute_digest
-        token = register_and_login("player3", "pass123")
+        token  = register_and_login("player3", "pass123")
         digest = compute_digest("player3", 100, 120.0)
         client.post(
             "/scores/submit",
             json={"score": 100, "duration_s": 120.0, "hmac": digest},
             headers={"Authorization": f"Bearer {token}"},
         )
-        r = client.get("/scores/leaderboard")
+        r      = client.get("/scores/leaderboard")
         scores = [e["score"] for e in r.json()]
         assert 100 in scores
