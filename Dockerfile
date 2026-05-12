@@ -6,9 +6,10 @@ COPY scr/          ./scr/
 COPY assets/       ./assets/
 COPY sounds/       ./sounds/
 COPY munro.ttf     ./
-COPY save.txt      ./
 
-RUN pip install --no-cache-dir pygame pyinstaller
+RUN echo "0
+0
+0" > save.txt && pip install --no-cache-dir pygame pyinstaller
 
 # ── Stage 2 : runtime ────────────────────────────────────────────────────────
 FROM python:3.11-slim AS runtime
