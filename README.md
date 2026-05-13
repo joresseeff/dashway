@@ -2,70 +2,56 @@
 
 # 🚗 DASHWAY
 
-**A three-lane arcade car dodger — inspired by the Nokia 3310 classic**
+**Un jeu d'arcade de conduite à trois voies — inspiré du classique Nokia 3310**
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![Pygame](https://img.shields.io/badge/Pygame-2.x-green?logo=python)
-![License](https://img.shields.io/badge/License-MIT-yellow)
-![Status](https://img.shields.io/badge/Status-Active-brightgreen)
+![License](https://img.shields.io/badge/Licence-MIT-yellow)
+![Status](https://img.shields.io/badge/Statut-Actif-brightgreen)
 
 </div>
 
 ---
 
-## 📖 About
+## 📖 À propos
 
-Dashway is a top-down arcade racing game built with **Python** and **Pygame**.
-Dodge incoming cars across three lanes, collect coins, buy bombs, and climb the
-scoreboard — all in a pixel-art aesthetic paying homage to the iconic Nokia car game.
+Dashway est un jeu de course arcade en vue de dessus développé avec **Python** et **Pygame**.
+Évitez les voitures adverses sur trois voies, collectez des pièces, achetez des bombes et grimpez
+au classement — le tout dans une esthétique pixel-art hommage à l'emblématique jeu de voiture Nokia.
 
-Originally created as a group project during a **24-hour dev marathon** in Bachelor 1
-(OpenIT, 2023). This version is a full refactor with clean architecture, English
-docstrings, and an automated CI/CD pipeline.
+Créé à l'origine en projet de groupe lors d'un **marathon de développement de 24 heures** en Bachelor 1
+(OpenIT, 2023). Cette version est un refactor complet avec une architecture propre, des docstrings
+en anglais, une API de leaderboard en ligne et un pipeline CI/CD automatisé.
 
 ---
 
 ## 🎮 Gameplay
 
-| Action | Key |
+| Action | Touche |
 |---|---|
-| Move left | ← Arrow |
-| Move right | → Arrow |
-| Launch bomb | Space |
+| Se déplacer à gauche | ← Flèche |
+| Se déplacer à droite | → Flèche |
+| Lancer une bombe | Espace |
+| Pause | Échap |
 
-**Scoring** — every enemy car that exits the bottom of the screen without hitting
-you earns **1 point**. Speed increases with your score following the formula
-`speed = BASE + floor(score / (n²·1.5))`.
+**Score** — chaque voiture ennemie qui sort par le bas sans vous toucher rapporte **1 point**.
+La vitesse augmente avec le score selon la formule `vitesse = BASE + floor(score / (n²·1.5))`.
 
-**Coins** — collected in-game, spent in the **Shop** to buy bombs (3 coins each).
+**Pièces** — collectées en jeu, dépensées dans le **Shop** pour acheter des bombes (3 pièces chacune).
 
-**Bombs** — launched upward to destroy the first enemy car they hit.
+**Bombes** — lancées vers le haut pour détruire la première voiture ennemie touchée.
+
+### Power-ups
+
+| Icône | Type | Effet |
+|---|---|---|
+| 🛡 `[S]` | **Bouclier** | Absorbe une collision (activation manuelle avec **P**) |
+| 💠 `[SL]` | **Ralenti** | Divise la vitesse par deux pendant 4 secondes |
+| ⭐ `[x2]` | **Multiplicateur** | Double les pièces gagnées pendant 5 secondes |
 
 ---
 
-## 🗂 Project Structure
-
-```
-dashway/
-├── scr/                 # All Python source files
-│   ├── main.py          # Entry point — window, sounds, main loop
-│   ├── game.py          # Game session logic (spawning, collisions, HUD)
-│   ├── player.py        # Player-controlled car
-│   ├── car.py           # Enemy car sprite
-│   ├── coin.py          # Collectable coin with spin animation
-│   ├── bomb.py          # Player projectile
-│   ├── menu.py          # Generic menu screen
-│   ├── button.py        # Clickable UI button
-│   └── init.py          # Global constants (WIDTH, HEIGHT, etc.)
-├── assets/              # PNG sprites and backgrounds
-├── sounds/              # MP3 sound effects and music
-├── munro.ttf            # Pixel font
-├── save.txt             # Persisted player data (gitignored)
-├── .gitignore
-├── LICENSE              # MIT
-└── README.md
-```
-
+## 🗂 Structure du projet
 ---
 
 ## 🏗 Architecture
@@ -93,6 +79,8 @@ classDiagram
         -_spawn_objects()
         -_check_collisions()
         -_trigger_game_over()
+        -_apply_powerup()
+        +toggle_pause()
     }
 
     class Player {
@@ -126,8 +114,22 @@ classDiagram
         +active: bool
         +launch()
         +collide(objects) tuple
-        +left()
-        +right()
+    }
+
+    class PowerUp {
+        +type: PowerUpType
+        +x: int
+        +y: float
+        +update(screen, speed)
+        +get_rect() Rect
+    }
+
+    class Database {
+        +load_player() tuple
+        +save_player(coins, bombs)
+        +get_top_scores() list
+        +get_best_score() int
+        +add_score(score, duration_s)
     }
 
     class Menu {
@@ -139,26 +141,29 @@ classDiagram
         +collide(x, y) tuple
     }
 
-    class Button {
-        +id: int
-        +draw()
-        +collide(x, y) bool
-    }
-
     Main --> Game
     Main --> Menu
+    Main --> Database
     Game --> Player
     Game --> Car
     Game --> Coin
     Game --> Bomb
-    Menu --> Button
+    Game --> PowerUp
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🔐 Architecture de l'API**Sécurité implémentée :**
+- Mots de passe hashés avec **bcrypt**
+- Authentification par **JWT** (expiration 24h)
+- Intégrité des scores vérifiée par **HMAC-SHA256** (anti-triche basique)
+- **Rate limiting** : 10 soumissions de score par minute par IP
 
-### Prerequisites
+---
+
+## 🚀 Installation et lancement
+
+### Prérequis
 
 - Python **3.10+**
 - pip
@@ -166,90 +171,125 @@ classDiagram
 ### Installation
 
 ```bash
-# 1. Clone the repo
-git clone https://github.com/YOUR_USERNAME/dashway.git
+# 1. Cloner le dépôt
+git clone https://github.com/joresseeff/dashway.git
 cd dashway
 
-# 2. Create a virtual environment (recommended)
+# 2. Créer un environnement virtuel (recommandé)
 python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+source venv/bin/activate        # Windows : venv\Scripts\activate
 
-# 3. Install dependencies
+# 3. Installer les dépendances
 pip install pygame
 
-# 4. Run the game
+# 4. Lancer le jeu
 cd scr
 python main.py
 ```
 
-### Build a standalone executable (Windows)
+### Avec Docker (jeu + API)
+
+```bash
+# Lancer le jeu et l'API ensemble
+docker compose up --build
+
+# L'API est accessible sur http://localhost:8000
+# Documentation interactive : http://localhost:8000/docs
+```
+
+### Build exécutable Windows
 
 ```bash
 pip install pyinstaller
 cd scr
-pyinstaller --onefile --noconsole --add-data "../assets;assets" \
+pyinstaller --onefile --noconsole --name Dashway \
+            --add-data "../assets;assets" \
             --add-data "../sounds;sounds" \
             --add-data "../munro.ttf;." main.py
-# Executable → dist/main.exe
+# Exécutable → dist/Dashway.exe
 ```
 
 ---
 
-## 🔧 Configuration
+## ⚙️ Configuration
 
-All tunable constants live in `scr/init.py`:
+Constantes globales dans `scr/init.py` :
 
-| Constant | Default | Description |
+| Constante | Valeur par défaut | Description |
 |---|---|---|
-| `WIDTH` | `500` | Window width in pixels |
-| `HEIGHT` | `800` | Window height in pixels |
-| `OFFSET` | `WIDTH / 10` | Lane-padding for sprite centring |
+| `WIDTH` | `500` | Largeur de la fenêtre (pixels) |
+| `HEIGHT` | `800` | Hauteur de la fenêtre (pixels) |
+| `OFFSET` | `WIDTH / 10` | Marge pour centrer les sprites dans une voie |
 
-Game-balance constants are class-level attributes in `game.py`:
+Constantes d'équilibrage dans `scr/game.py` :
 
-| Constant | Default | Description |
+| Constante | Valeur | Description |
 |---|---|---|
-| `_BASE_SPEED` | `9` | Starting scroll speed |
-| `_COUNTDOWN` | `3` | Pre-game countdown (seconds) |
-| `_OBJ_COOLDOWN` | `0.8` | Seconds between spawns |
-| `_GAMEOVER_DELAY` | `1.5` | Boom screen duration (seconds) |
+| `_BASE_SPEED` | `9` | Vitesse de défilement initiale |
+| `_COUNTDOWN` | `3` | Compte à rebours avant le début (secondes) |
+| `_OBJ_COOLDOWN` | `0.8` | Délai entre deux spawns (secondes) |
+| `_GAMEOVER_DELAY` | `1.5` | Durée d'affichage de l'explosion (secondes) |
+| `_SLOW_DURATION` | `4.0` | Durée du ralenti (secondes) |
+| `_MULTI_DURATION` | `5.0` | Durée du multiplicateur (secondes) |
 
 ---
 
-## 🛣 Roadmap
+## 🧪 Tests
 
-- [x] Phase 1 — Code quality, documentation, CI/CD
-- [ ] Phase 2 — Gameplay improvements (power-ups, pause, top-5 scores, SQLite save)
-- [ ] Phase 3 — Infrastructure (Docker, GitHub Actions releases)
-- [ ] Phase 4 — Online leaderboard (FastAPI + JWT + anti-cheat HMAC)
-- [ ] Phase 5 — Web/mobile port (Phaser.js or Kivy)
+```bash
+# Tests du jeu (sans serveur)
+pip install pygame pytest
+SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy pytest tests/ -v --tb=short
 
----
+# Tests de l'API
+pip install -r api/requirements.txt httpx
+pytest tests/test_api.py -v
+```
 
-## 🤝 Contributing
+**Couverture actuelle : 34 tests**
 
-Pull requests are welcome. For major changes, please open an issue first to
-discuss what you would like to change.
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feat/my-feature`)
-3. Commit your changes (`git commit -m "feat: add shield power-up"`)
-4. Push to the branch (`git push origin feat/my-feature`)
-5. Open a Pull Request
-
-Please follow [Conventional Commits](https://www.conventionalcommits.org/) for
-commit messages.
+| Fichier | Tests | Couverture |
+|---|---|---|
+| `test_button.py` | 7 | Collisions boutons |
+| `test_player.py` | 6 | Déplacements et limites de voie |
+| `test_database.py` | 8 | CRUD SQLite, leaderboard |
+| `test_powerup.py` | 3 | Instanciation, hitbox, chute |
+| `test_api.py` | 10 | Auth JWT, soumission scores, HMAC |
 
 ---
 
-## 📜 License
+## 🛣 Feuille de route
 
-Distributed under the **MIT License** — see [LICENSE](LICENSE) for details.
+- [x] Phase 1 — Qualité du code, documentation, CI/CD
+- [x] Phase 2 — Améliorations gameplay (power-ups, pause, leaderboard SQLite)
+- [x] Phase 3 — Infrastructure (Docker multi-stage, GHCR, release automatique)
+- [x] Phase 4 — API en ligne (FastAPI, JWT, HMAC anti-cheat)
+- [ ] Phase 5 — Port web/mobile (Phaser.js ou Kivy)
 
 ---
 
-## 🙏 Acknowledgements
+## 🤝 Contribuer
 
-- Original team members from the OpenIT dev marathon (2023)
-- Nokia 3310 car game — the timeless inspiration
-- [Munro font](https://www.dafont.com/munro.font) by Ten by Twenty
+Les pull requests sont les bienvenues. Pour les changements majeurs, ouvrez d'abord une issue.
+
+1. Forkez le dépôt
+2. Créez une branche (`git checkout -b feat/ma-fonctionnalite`)
+3. Commitez vos changements (`git commit -m "feat: ajouter le bouclier power-up"`)
+4. Pushez la branche (`git push origin feat/ma-fonctionnalite`)
+5. Ouvrez une Pull Request
+
+Suivez les [Conventional Commits](https://www.conventionalcommits.org/fr/) pour les messages de commit.
+
+---
+
+## 📜 Licence
+
+Distribué sous la **Licence MIT** — voir [LICENSE](LICENSE) pour les détails.
+
+---
+
+## 🙏 Remerciements
+
+- Membres de l'équipe originale du marathon dev OpenIT (2023)
+- Le jeu de voiture Nokia 3310 — l'inspiration intemporelle
+- [Police Munro](https://www.dafont.com/munro.font) par Ten by Twenty
