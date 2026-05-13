@@ -13,7 +13,6 @@ Power-ups fall down the screen exactly like coins and disappear if not
 collected before leaving the bottom edge.
 """
 
-import os
 import pygame
 from enum import Enum, auto
 from init import WIDTH

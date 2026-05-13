@@ -26,7 +26,6 @@ from bomb import Bomb
 from powerup import PowerUp, PowerUpType
 from init import WIDTH, HEIGHT
 from paths import resource
-from paths import resource
 
 
 class Game:
