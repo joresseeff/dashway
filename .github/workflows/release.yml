@@ -6,7 +6,6 @@ on:
       - "v*.*.*"
 
 jobs:
-  # ── Windows executable ────────────────────────────────────────────────────
   build-windows:
     name: Build Windows executable
     runs-on: windows-latest
@@ -18,19 +17,17 @@ jobs:
       - name: Install dependencies
         run: pip install pygame pyinstaller
       - name: Build exe
-        working-directory: scr
         run: >
           pyinstaller --onefile --noconsole --name Dashway
-          --add-data "../assets;assets"
-          --add-data "../sounds;sounds"
-          --add-data "../munro.ttf;."
-          main.py
+          --add-data "assets;assets"
+          --add-data "sounds;sounds"
+          --add-data "munro.ttf;."
+          scr/main.py
       - uses: actions/upload-artifact@v4
         with:
           name: Dashway-windows
-          path: scr/dist/Dashway.exe
+          path: dist/Dashway.exe
 
-  # ── Docker image → GitHub Container Registry ──────────────────────────────
   docker-publish:
     name: Publish Docker image
     runs-on: ubuntu-latest
@@ -54,7 +51,6 @@ jobs:
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ github.ref_name }}
 
-  # ── GitHub Release ────────────────────────────────────────────────────────
   github-release:
     name: Publish GitHub Release
     runs-on: ubuntu-latest
@@ -73,9 +69,6 @@ jobs:
           body: |
             ## 🚗 Dashway ${{ github.ref_name }}
 
-            ### Download
+            ### Téléchargement
             - **Windows** : télécharge `Dashway.exe` ci-dessous — aucune installation requise
             - **Docker** : `docker pull ghcr.io/joresseeff/dashway:${{ github.ref_name }}`
-
-            ### Changelog
-            Voir [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
