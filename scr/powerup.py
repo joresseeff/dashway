@@ -18,7 +18,8 @@ import pygame
 from enum import Enum, auto
 from init import WIDTH
 
-_FONT_PATH = os.path.join(os.path.dirname(__file__), "..", "munro.ttf")
+from paths import resource
+_FONT_PATH = resource("munro.ttf")
 
 
 class PowerUpType(Enum):

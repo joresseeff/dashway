@@ -25,6 +25,8 @@ from coin import Coin
 from bomb import Bomb
 from powerup import PowerUp, PowerUpType
 from init import WIDTH, HEIGHT
+from paths import resource
+from paths import resource
 
 
 class Game:
@@ -115,17 +117,17 @@ class Game:
         self._line_offset: int = 0
 
         # Assets
-        self._boum_image  = pygame.image.load("../assets/boum.png")
-        bomb_img          = pygame.image.load("../assets/bomb.png")
+        self._boum_image  = pygame.image.load(resource("assets/boum.png"))
+        bomb_img          = pygame.image.load(resource("assets/bomb.png"))
         self._bomb_icon   = pygame.transform.scale(bomb_img, (80, 80))
         self._coin_frames = self._slice_coin_sheet()
         self._car_surfaces = self._slice_car_sheet()
 
         # Fonts
-        self._font           = pygame.font.Font("../munro.ttf", 40)
-        self._font_countdown = pygame.font.Font("../munro.ttf", 100)
-        self._font_pause     = pygame.font.Font("../munro.ttf", 80)
-        self._font_small     = pygame.font.Font("../munro.ttf", 28)
+        self._font           = pygame.font.Font(resource("munro.ttf"), 40)
+        self._font_countdown = pygame.font.Font(resource("munro.ttf"), 100)
+        self._font_pause     = pygame.font.Font(resource("munro.ttf"), 80)
+        self._font_small     = pygame.font.Font(resource("munro.ttf"), 28)
 
         # Player
         self.player = Player(1, choice(self._car_surfaces))
@@ -450,7 +452,7 @@ class Game:
     # ------------------------------------------------------------------
 
     def _slice_coin_sheet(self) -> list:
-        sheet   = pygame.image.load("../assets/coin.png")
+        sheet   = pygame.image.load(resource("assets/coin.png"))
         frame_w = sheet.get_width() // 13
         frames  = []
         for i in range(13):
@@ -461,7 +463,7 @@ class Game:
         return frames
 
     def _slice_car_sheet(self) -> list:
-        sheet      = pygame.image.load("../assets/cars.png")
+        sheet      = pygame.image.load(resource("assets/cars.png"))
         cols, rows = 3, 2
         w = sheet.get_width()  // cols
         h = sheet.get_height() // rows

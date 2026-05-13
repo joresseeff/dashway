@@ -1,3 +1,4 @@
+from paths import resource
 """
 menu.py
 -------
@@ -32,7 +33,7 @@ class Menu:
         self.bg = bg
         self.buttons: list[Button] = []
         self.labels: list[tuple] = []
-        self._font = pygame.font.Font("../munro.ttf", 50)
+        self._font = pygame.font.Font(resource("munro.ttf"), 50)
 
     # ------------------------------------------------------------------
     # Public helpers
@@ -71,7 +72,7 @@ class Menu:
             size: Font size in points.
             color: Label colour.
         """
-        font = pygame.font.Font("../munro.ttf", size)
+        font = pygame.font.Font(resource("munro.ttf"), size)
         self.buttons.append(Button(id, x, y, w, h, image, self.screen, text, font, color))
 
     def add_label(
@@ -87,7 +88,7 @@ class Menu:
             color: Text colour.
             id: Unique identifier so the label can be updated later.
         """
-        font = pygame.font.Font("../munro.ttf", size)
+        font = pygame.font.Font(resource("munro.ttf"), size)
         surface = font.render(text, True, color)
         self.labels.append((surface, (x, y), id))
 
@@ -104,7 +105,7 @@ class Menu:
             color: Text colour.
             id: Identifier of the label to update.
         """
-        font = pygame.font.Font("../munro.ttf", size)
+        font = pygame.font.Font(resource("munro.ttf"), size)
         new_surface = font.render(text, True, color)
         self.labels = [
             (new_surface, (x, y), id) if lbl_id == id else (surf, pos, lbl_id)
