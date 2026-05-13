@@ -86,7 +86,8 @@ def main() -> None:
         if top:
             for entry in top:
                 y = HEIGHT // 4 + entry["rank"] * 80
-                m.add_label(40, y, f"#{entry['rank']}  {entry['score']} pts  {entry['date']}", 35, "blue", 10 + entry["rank"])
+                label = f"#{entry['rank']}  {entry['score']} pts  {entry['date']}"
+                m.add_label(40, y, label, 35, "blue", 10 + entry["rank"])
         else:
             m.add_label(WIDTH // 2 - 160, HEIGHT // 2, "Aucun score !", 50, "blue", 11)
         m.add_button(8, WIDTH // 2 - 100, HEIGHT - 120, 200, 70, btn_green, "RETOUR", 50, "blue")
