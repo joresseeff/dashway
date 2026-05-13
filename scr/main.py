@@ -52,7 +52,8 @@ def main() -> None:
     crash_sound = pygame.mixer.Sound(resource("sounds/carCollide.mp3"))
     pygame.mixer.Sound.play(main_music, loops=-1)
 
-    bg_main   = pygame.transform.scale(pygame.image.load(resource("assets/bgMenu.png")), (WIDTH, HEIGHT))
+    bg_main = pygame.transform.scale(
+        pygame.image.load(resource("assets/bgMenu.png")), (WIDTH, HEIGHT))
     bg_shop   = pygame.transform.scale(pygame.image.load(resource("assets/shopBG.png")), (WIDTH, HEIGHT))
     btn_green = pygame.image.load(resource("assets/greenButton.png"))
     btn_red   = pygame.image.load(resource("assets/redButton.png"))
